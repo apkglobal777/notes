@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tara - your voice tutor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="notebook">
+    <header>
+      <h1>Ask Tara</h1>
+      <p>Press the big button, speak your question, and listen to the answer.</p>
+    </header>
+
+    <div class="pickers">
+      <label>Class
+        <select id="grade">
+          <option>Class 3</option><option>Class 4</option><option>Class 5</option>
+          <option selected>Class 6</option><option>Class 7</option><option>Class 8</option>
+          <option>Class 9</option><option>Class 10</option>
+          <option>Class 11</option><option>Class 12</option>
+        </select>
+      </label>
+      <label>Subject
+        <select id="subject">
+          <option>Maths</option><option>Science</option><option>English</option>
+          <option>Social Science</option><option>Hindi</option><option>Computer</option>
+          <option selected>Any subject</option>
+        </select>
+      </label>
+    </div>
+
+    <section id="chat" class="chat" aria-live="polite">
+      <div class="bubble tutor">Hi! I'm Tara. What would you like to learn today?</div>
+    </section>
+
+    <p id="status" class="status" role="status">Ready</p>
+
+    <div class="controls">
+      <button id="mic" class="mic" aria-label="Start speaking" type="button">
+        <svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true">
+          <path fill="currentColor" d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3Zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2Z"/>
+        </svg>
+      </button>
+      <button id="stop" class="ghost" type="button">Stop voice</button>
+    </div>
+
+    <form id="typeForm" class="type-form" autocomplete="off">
+      <input id="typed" type="text" placeholder="Or type your question here" maxlength="300" aria-label="Type your question">
+      <button type="submit">Send</button>
+    </form>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
