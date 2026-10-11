@@ -1,7 +1,11 @@
 """
 AI Voice Tutor - Flask backend
 Flow: browser records voice -> /api/transcribe (Groq Whisper)
-      -> /api/chat (Groq Llama) -> browser speaks the answer aloud.
+      -> /api/chat (Groq GPT-OSS) -> browser speaks the answer aloud.
+
+Models can be changed in the .env file without touching this code:
+    CHAT_MODEL, FALLBACK_MODEL, STT_MODEL
+Check current model names at https://console.groq.com/docs/models
 """
 import os
 
@@ -9,14 +13,16 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
 from groq import Groq
 
-load_dotenv()  # reads GROQ_API_KEY from the .env file
+load_dotenv()  # reads GROQ_API_KEY (and optional model names) from .env
 
 app = Flask(__name__)
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-STT_MODEL = "whisper-large-v3-turbo"   # speech -> text
-CHAT_MODEL = "llama-3.3-70b-versatile"  # the tutor's brain
-MAX_HISTORY = 10                        # keep only the last 10 messages
+# Current Groq production models (self-serve, October 2026)
+STT_MODEL = os.environ.get("STT_MODEL", "whisper-large-v3-turbo")      # speech -> text
+CHAT_MODEL = os.environ.get("CHAT_MODEL", "openai/gpt-oss-120b")       # tutor brain
+FALLBACK_MODEL = os.environ.get("FALLBACK_MODEL", "openai/gpt-oss-20b")  # used if the first fails
+MAX_HISTORY = 10  # keep only the last 10 messages
 
 
 def build_system_prompt(grade: str, subject: str) -> str:
@@ -58,7 +64,7 @@ def transcribe():
             response_format="json",
         )
         return jsonify(text=result.text.strip())
-    except Exception as exc:  # network error, bad key, rate limit...
+    except Exception:
         app.logger.exception("Transcription failed")
         return jsonify(error="Could not understand the audio. Please try again."), 500
 
@@ -80,19 +86,32 @@ def chat():
         for m in history
         if m.get("role") in ("user", "assistant")
     ]
+    messages = [{"role": "system", "content": build_system_prompt(grade, subject)}] + clean
 
-    try:
-        completion = client.chat.completions.create(
-            model=CHAT_MODEL,
-            messages=[{"role": "system", "content": build_system_prompt(grade, subject)}]
-            + clean,
-            temperature=0.5,
-            max_tokens=300,
-        )
-        return jsonify(reply=completion.choices[0].message.content.strip())
-    except Exception:
-        app.logger.exception("Chat failed")
-        return jsonify(error="The tutor is busy. Please try again in a moment."), 500
+    # Try the main model first, then the fallback (dict.fromkeys removes duplicates)
+    for model in dict.fromkeys([CHAT_MODEL, FALLBACK_MODEL]):
+        try:
+            options = {}
+            if "gpt-oss" in model:
+                # GPT-OSS models "think" before answering; low effort keeps replies fast
+                options["extra_body"] = {"reasoning_effort": "low"}
+
+            completion = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=0.5,
+                max_completion_tokens=1024,  # room for thinking + a short answer
+                **options,
+            )
+            reply = (completion.choices[0].message.content or "").strip()
+            if reply:
+                return jsonify(reply=reply)
+            app.logger.warning("Model %s returned an empty reply", model)
+        except Exception as exc:
+            app.logger.warning("Model %s failed: %s", model, exc)
+
+    app.logger.error("All chat models failed. Check your key and model names.")
+    return jsonify(error="The tutor is busy. Please try again in a moment."), 500
 
 
 if __name__ == "__main__":
