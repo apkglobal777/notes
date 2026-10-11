@@ -1,0 +1,85 @@
+
+Voice Tutor Project – Simple Steps for Students
+
+Step 1: Create the project folder - AIVoiceTutor
+Github -> new repo create -> AIVoiceTutor
+Vscode -> Create new folder -> AIVoiceTutor
+Install Python 3.9 or newer from Python Downloads.
+Open Terminal and run:
+python -m venv venv
+Activate the virtual environment.
+Windows:
+venv\Scripts\activate
+Mac/Linux:
+source venv/bin/activate
+
+Step 2: Create requirements.txt
+Run this command:
+pip freeze > requirements.txt
+pip install flask groq python-dotenv
+Install the packages:
+pip install -r requirements.txt
+
+Step 3: Get your Groq API key
+1. Open Groq API Keys.
+2. Sign in and create an API key.
+3. Create a file named .env in your project folder.
+4. Add this line to the file:
+GROQ_API_KEY=your_key_here
+Replace your_key_here with your actual API key. Never share your API key publicly.
+
+Step 4: Create the project files
+Run these commands inside the voice-tutor folder.
+Windows:
+create folder templates
+create folder static
+create app.py file
+create index.html inside templates folder
+create style.css file inside static folder
+create app.js file inside static folder
+
+Your folder structure should look like this:
+voice-tutor/
+├── venv/
+├── .env
+├── requirements.txt
+├── app.py
+├── templates/
+│   └── index.html
+└── static/
+    ├── style.css
+    └── app.js
+
+Step 5: Write the Python server
+Open app.py in your code editor. You will write the Flask server, connect the Groq API, and create two routes:
+* /api/transcribe — converts recorded speech into text.  
+* /api/chat — sends the student's question to the AI tutor.  
+Use the Groq models whisper-large-v3-turbo for transcription and llama-3.3-70b-versatile for chat, subject to current API availability.
+
+Step 6: Create the website
+Open templates/index.html and add:
+* Class and subject dropdowns
+* Chat area
+* Microphone button
+* Stop voice button
+* Text input box
+* Status message
+In static/style.css, style the page, chat bubbles, and microphone button.
+
+Step 7: Add voice functionality
+Open static/app.js and implement:
+1. Record audio using the browser's MediaRecorder.
+2. Send audio to /api/transcribe.
+3. Send the transcribed question to /api/chat.
+4. Read the AI answer aloud using speechSynthesis.
+5. Allow students to type questions as well.  
+Step 8: Run the project
+In your terminal, run:
+python app.py
+Open this URL in Chrome or Edge:
+Open Voice Tutor.
+Allow microphone access and test your tutor.
+If something doesn't work:
+* Check the terminal for Python errors.
+* Press F12 to inspect browser errors.
+* Try typing a question first to test the AI chat without using the microphone.  
